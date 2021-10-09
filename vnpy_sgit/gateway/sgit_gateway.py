@@ -4,7 +4,7 @@ import pytz
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from vnpy.api.sgit import (
+from vnpy_sgit.api import (
     MdApi,
     TdApi,
     THOST_FTDC_OAS_Submitted,
