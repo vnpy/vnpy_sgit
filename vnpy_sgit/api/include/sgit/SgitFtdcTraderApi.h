@@ -96,8 +96,9 @@ public:
 	virtual void OnRspForQuoteInsert(CThostFtdcInputForQuoteField *pInputForQuote, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
 	///报价录入请求响应
-	virtual void OnRspQuoteInsert(CThostFtdcInputQuoteField *pInputQuote, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
-
+	//20210225高频2.3是CThostFtdcQuoteField不是CThostFtdcInputQuoteField
+	//virtual void OnRspQuoteInsert(CThostFtdcInputQuoteField *pInputQuote, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
+	virtual void OnRspQuoteInsert(CThostFtdcQuoteField *pInputQuote, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 	///报价操作请求响应
 	virtual void OnRspQuoteAction(CThostFtdcInputQuoteActionField *pInputQuoteAction, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast) {};
 
@@ -367,17 +368,17 @@ public:
 
 
 	/// 递延费方向和费率询回报
-	virtual void OnRspQryDeferFeeRate(CThostDeferFeeRateField *pDeferFeeRate,CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
+	virtual void OnRspQryDeferFeeRate(CThostDeferFeeRateField* pDeferFeeRate,CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
 	/// 递延费方向和费率更知
-	virtual void OnRtnDeferFeeRate(CThostDeferFeeRateField *pDeferFeeRate){};
+	virtual void OnRtnDeferFeeRate(CThostDeferFeeRateField* pDeferFeeRate){};
 
 	/// 递延交割/中立仓成交查询通知
-	virtual void OnRspQryDeferMidTrade(CThostDeferMidAppTradeField *pDeferMidAppMatch,CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
+	virtual void OnRspQryDeferMidTrade(CThostDeferMidAppTradeField* pDeferMidAppMatch,CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast){};
 	/// 递延交割/中立仓成交通知
-	virtual void OnRtnDeferMidTrade(CThostDeferMidAppTradeField *pDeferMidAppMatch){};
+	virtual void OnRtnDeferMidTrade(CThostDeferMidAppTradeField* pDeferMidAppMatch){};
 
 	///持仓轧差通知
-	virtual void OnRtnPositionNetting(CThostFtdcPositionNettingField *pPositionNetting){};
+	virtual void OnRtnPositionNetting(CThostFtdcPositionNettingField* pPositionNetting){};
 };
 
 class FS_TRADER_API_EXPORT CThostFtdcTraderApi

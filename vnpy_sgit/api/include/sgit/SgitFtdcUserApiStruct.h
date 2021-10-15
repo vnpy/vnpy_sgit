@@ -3331,6 +3331,10 @@ struct CThostFtdcInputQuoteField
 	TThostFtdcOrderRefType	BidOrderRef;
 	///应价编号
 	TThostFtdcOrderSysIDType	ForQuoteSysID;
+	//停留时间,单位s
+	TThostFtdcVolumeType StayTime;
+	//是否是做市场
+	TThostFtdcBoolType bMktMk;
 };
 
 ///输入报价操作

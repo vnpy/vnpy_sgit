@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-    <img src ="https://img.shields.io/badge/version-1.0-blueviolet.svg"/>
+    <img src ="https://img.shields.io/badge/version-4.8-blueviolet.svg"/>
     <img src ="https://img.shields.io/badge/platform-windows|linux-yellow.svg"/>
     <img src ="https://img.shields.io/badge/python-3.7-blue.svg" />
     <img src ="https://img.shields.io/github/license/vnpy/vnpy.svg?color=orange"/>
@@ -12,11 +12,11 @@
 
 ## 说明
 
-基于飞鼠接口封装开发。
+基于飞鼠4.8版本封装开发的linux接口(暂不支持windows)。
 
 ## 安装
 
-安装需要基于2.6.0版本以上的[VN Studio](https://www.vnpy.com)。
+安装需要基于2.7.0版本以上的[VN Studio](https://www.vnpy.com)。
 
 直接使用pip命令：
 

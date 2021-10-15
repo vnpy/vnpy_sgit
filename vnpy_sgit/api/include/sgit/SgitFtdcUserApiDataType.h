@@ -996,8 +996,15 @@ typedef char TThostFtdcPriceSourceType;
 ///集合竞价撮合
 #define THOST_FTDC_IS_AuctionMatch '5'
 ///收盘
-#define THOST_FTDC_IS_Closed '6'
-
+#define THOST_FTDC_IS_Closed	'6'
+ //交割申报
+#define	THOST_FTDC_IS_DERY_APP	'7'  
+ //交割申报结束
+#define	THOST_FTDC_IS_DERY_MATCH '8'  
+ //中立仓申报
+#define	THOST_FTDC_IS_MID_APP     '9'   
+//交割申报撮合
+#define	THOST_FTDC_IS_MID_MATCH  'A'           
 typedef char TThostFtdcInstrumentStatusType;
 
 /////////////////////////////////////////////////////////////////////////
