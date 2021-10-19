@@ -142,7 +142,9 @@ symbol_size_map: Dict[str, float] = {}
 
 
 class SgitGateway(BaseGateway):
-    """vn.py用于对接飞鼠的接口"""
+    """
+    vn.py用于对接飞鼠的接口。
+    """
 
     default_setting: Dict[str, str] = {
         "用户名": "",
