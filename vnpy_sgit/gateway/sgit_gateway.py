@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 import pytz
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ..api import (
     MdApi,
@@ -64,7 +64,7 @@ from vnpy.trader.object import (
 from vnpy.trader.utility import get_folder_path
 from vnpy.trader.event import EVENT_TIMER
 
-
+# 委托状态映射
 STATUS_SGIT2VT: Dict[str, Status] = {
     THOST_FTDC_OAS_Submitted: Status.SUBMITTING,
     THOST_FTDC_OAS_Accepted: Status.SUBMITTING,
@@ -75,6 +75,7 @@ STATUS_SGIT2VT: Dict[str, Status] = {
     THOST_FTDC_OST_Canceled: Status.CANCELLED
 }
 
+# 多空方向映射
 DIRECTION_VT2SGIT: Dict[Direction, str] = {
     Direction.LONG: THOST_FTDC_D_Buy,
     Direction.SHORT: THOST_FTDC_D_Sell
@@ -83,12 +84,14 @@ DIRECTION_SGIT2VT: Dict[str, Direction] = {v: k for k, v in DIRECTION_VT2SGIT.it
 DIRECTION_SGIT2VT[THOST_FTDC_PD_Long] = Direction.LONG
 DIRECTION_SGIT2VT[THOST_FTDC_PD_Short] = Direction.SHORT
 
+# 委托类型映射
 ORDERTYPE_VT2SGIT: Dict[OrderType, str] = {
     OrderType.LIMIT: THOST_FTDC_OPT_LimitPrice,
     OrderType.MARKET: THOST_FTDC_OPT_AnyPrice
 }
 ORDERTYPE_SGIT2VT: Dict[str, OrderType] = {v: k for k, v in ORDERTYPE_VT2SGIT.items()}
 
+# 开平方向映射
 OFFSET_VT2SGIT: Dict[Offset, str] = {
     Offset.OPEN: THOST_FTDC_OF_Open,
     Offset.CLOSE: THOST_FTDC_OFEN_Close,
@@ -97,6 +100,7 @@ OFFSET_VT2SGIT: Dict[Offset, str] = {
 }
 OFFSET_SGIT2VT: Dict[str, Offset] = {v: k for k, v in OFFSET_VT2SGIT.items()}
 
+# 交易所映射
 EXCHANGE_SGIT2VT: Dict[str, Exchange] = {
     "CFFEX": Exchange.CFFEX,
     "SHFE": Exchange.SHFE,
@@ -113,6 +117,7 @@ EXCHANGE_SGIT2VT: Dict[str, Exchange] = {
 
 }
 
+# 产品类型映射
 PRODUCT_SGIT2VT: Dict[str, Product] = {
     THOST_FTDC_PC_Futures: Product.FUTURES,
     THOST_FTDC_PC_Options: Product.OPTION,
@@ -120,14 +125,17 @@ PRODUCT_SGIT2VT: Dict[str, Product] = {
     THOST_FTDC_PC_Combination: Product.SPREAD
 }
 
+# 期权类型映射
 OPTIONTYPE_SGIT2VT: Dict[str, OptionType] = {
     THOST_FTDC_CP_CallOptions: OptionType.CALL,
     THOST_FTDC_CP_PutOptions: OptionType.PUT
 }
 
+# 其他常量
 MAX_FLOAT: float = sys.float_info.max
 CHINA_TZ = pytz.timezone("Asia/Shanghai")
 
+# 全局缓存字典
 symbol_exchange_map: Dict[str, Exchange] = {}
 symbol_name_map: Dict[str, str] = {}
 symbol_size_map: Dict[str, float] = {}
@@ -151,11 +159,11 @@ class SgitGateway(BaseGateway):
         """构造函数"""
         super().__init__(event_engine, "SGIT")
 
-        self.td_api: SgitTdApi = SgitTdApi(self)
-        self.md_api: SgitMdApi = SgitMdApi(self)
+        self.td_api: "SgitTdApi" = SgitTdApi(self)
+        self.md_api: "SgitMdApi" = SgitMdApi(self)
 
     def connect(self, setting: dict) -> None:
-        """"""
+        """连接交易接口"""
         userid: str = setting["用户名"]
         password: str = setting["密码"]
         td_address: str = setting["交易服务器"]
@@ -175,39 +183,39 @@ class SgitGateway(BaseGateway):
         self.init_query()
 
     def subscribe(self, req: SubscribeRequest) -> None:
-        """"""
+        """订阅行情"""
         self.md_api.subscribe(req)
 
     def send_order(self, req: OrderRequest) -> str:
-        """"""
+        """委托下单"""
         return self.td_api.send_order(req)
 
     def cancel_order(self, req: CancelRequest) -> None:
-        """"""
+        """委托撤单"""
         self.td_api.cancel_order(req)
 
     def query_account(self) -> None:
-        """"""
+        """查询资金"""
         self.td_api.query_account()
 
     def query_position(self) -> None:
-        """"""
+        """查询持仓"""
         self.td_api.query_position()
 
     def close(self) -> None:
-        """"""
+        """关闭接口"""
         self.td_api.close()
         self.md_api.close()
 
     def write_error(self, msg: str, error: dict) -> None:
-        """"""
+        """输出错误信息日志"""
         error_id: str = error["ErrorID"]
         error_msg: str = error["ErrorMsg"]
         msg: str = f"{msg}，代码：{error_id}，信息：{error_msg}"
         self.write_log(msg)
 
     def process_timer_event(self, event: Event) -> None:
-        """"""
+        """定时事件处理"""
         self.count += 1
         if self.count < 2:
             return
@@ -218,7 +226,7 @@ class SgitGateway(BaseGateway):
         self.query_functions.append(func)
 
     def init_query(self) -> None:
-        """"""
+        """初始化查询任务"""
         self.count: int = 0
         self.query_functions = [self.query_account, self.query_position]
         self.event_engine.register(EVENT_TIMER, self.process_timer_event)
@@ -227,7 +235,7 @@ class SgitGateway(BaseGateway):
 class SgitMdApi(MdApi):
     """飞鼠行情API"""
 
-    def __init__(self, gateway: SgitGateway):
+    def __init__(self, gateway: SgitGateway) -> None:
         """构造函数"""
         super().__init__()
 
@@ -245,17 +253,17 @@ class SgitMdApi(MdApi):
         self.brokerid: str = ""
 
     def onFrontConnected(self) -> None:
-        """连接成功回报"""
+        """服务器连接成功回报"""
         self.gateway.write_log("行情服务器连接成功")
         self.login()
 
     def onFrontDisconnected(self, reason: int) -> None:
-        """连接断开回报"""
+        """服务器连接断开回报"""
         self.login_status: bool = False
         self.gateway.write_log(f"行情服务器连接断开，原因{reason}")
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """用户登陆回报"""
+        """用户登录请求回报"""
         if not error["ErrorID"]:
             self.login_status: bool = True
             self.gateway.write_log("行情服务器登录成功")
@@ -266,20 +274,20 @@ class SgitMdApi(MdApi):
             self.gateway.write_error("行情服务器登录失败", error)
 
     def onRspError(self, error: dict, reqid: int, last: bool) -> None:
-        """错误发生回报"""
+        """请求报错回报"""
         self.gateway.write_error("行情接口报错", error)
 
     def onRspSubMarketData(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """订阅失败回报"""
+        """订阅行情回报"""
         if not error or not error["ErrorID"]:
             return
 
         self.gateway.write_error("行情订阅失败", error)
 
     def onRtnDepthMarketData(self, data: dict) -> None:
-        """tick数据更新推送"""
+        """行情数据推送"""
         symbol: str = data["InstrumentID"]
-        exchange: str = symbol_exchange_map.get(symbol, "")
+        exchange: Exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
             return
 
@@ -338,20 +346,21 @@ class SgitMdApi(MdApi):
 
         # 未连接状态下开始连接
         if not self.connect_status:
-            path: str = get_folder_path(self.gateway_name.lower())
+            path: Path = get_folder_path(self.gateway_name.lower())
             self.createFtdcMdApi(str(path) + "\\Md")
 
             self.registerFront(address)
             self.init()
 
             self.connect_status = True
-        # 已连接状态下立即登陆
+
+        # 已连接状态下立即登录
         elif not self.login_status:
             self.login()
 
     def login(self) -> None:
-        """用户登陆"""
-        req: Dict[str, str] = {
+        """用户登录"""
+        req: dict = {
             "UserID": self.userid,
             "Password": self.password,
             "BrokerID": self.brokerid
@@ -361,7 +370,7 @@ class SgitMdApi(MdApi):
         self.reqUserLogin(req, self.reqid)
 
     def subscribe(self, req: SubscribeRequest) -> None:
-        """订阅tick更新"""
+        """订阅行情"""
         if self.login_status:
             self.subscribeMarketData(req.symbol)
         self.subscribed.add(req.symbol)
@@ -375,7 +384,7 @@ class SgitMdApi(MdApi):
 class SgitTdApi(TdApi):
     """飞鼠交易API"""
 
-    def __init__(self, gateway: SgitGateway):
+    def __init__(self, gateway: SgitGateway) -> None:
         """构造函数"""
         super().__init__()
 
@@ -398,13 +407,13 @@ class SgitTdApi(TdApi):
         self.product_info: str = ""
         self.sge_investor: str = ""
 
-        self.order_data: list = []
-        self.trade_data: list = []
+        self.order_data: List[dict] = []
+        self.trade_data: List[dict] = []
         self.positions: Dict[str, PositionData] = {}
         self.sysid_orderid_map: Dict[str, str] = {}
 
     def onFrontConnected(self) -> None:
-        """连接成功回报"""
+        """服务器连接成功回报"""
         self.gateway.write_log("交易服务器连接成功")
 
         if self.auth_code:
@@ -413,12 +422,12 @@ class SgitTdApi(TdApi):
             self.login()
 
     def onFrontDisconnected(self, reason: int) -> None:
-        """连接断开回报"""
+        """服务器连接断开回报"""
         self.login_status: bool = False
         self.gateway.write_log(f"交易服务器连接断开，原因{reason}")
 
     def onRspAuthenticate(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """授权验证回报"""
+        """用户授权验证回报"""
         if not error['ErrorID']:
             self.auth_status: bool = True
             self.gateway.write_log("交易服务器授权验证成功")
@@ -427,7 +436,7 @@ class SgitTdApi(TdApi):
             self.gateway.write_error("交易服务器授权验证失败", error)
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """用户登陆回报"""
+        """用户登录请求回报"""
         if not error["ErrorID"]:
             self.login_status: bool = True
             self.gateway.write_log("交易服务器登录成功")
@@ -437,7 +446,7 @@ class SgitTdApi(TdApi):
                 self.order_ref: int = max(self.order_ref, int(data["MaxOrderRef"]))
 
             # 结算信息确认
-            req = {
+            req: dict = {
                 "BrokerID": self.brokerid,
                 "InvestorID": self.userid
             }
@@ -449,7 +458,7 @@ class SgitTdApi(TdApi):
             self.gateway.write_error("交易服务器登录失败", error)
 
     def onRspOrderInsert(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """委托下单"""
+        """委托下单失败回报"""
         if error["ErrorID"] == 0:
             return
 
@@ -459,7 +468,7 @@ class SgitTdApi(TdApi):
         self.order_ref: int = max(self.order_ref, int(orderid))
 
         symbol: str = data["InstrumentID"]
-        exchange: Optional[str] = symbol_exchange_map.get(symbol, None)
+        exchange: Exchange = symbol_exchange_map.get(symbol, None)
         if not exchange:
             return
 
@@ -477,12 +486,12 @@ class SgitTdApi(TdApi):
         self.gateway.on_order(order)
 
     def onRspOrderAction(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """撤单失败回报"""
+        """委托撤单失败回报"""
         if error["ErrorID"] != 0:
             self.gateway.write_error("交易撤单失败", error)
 
     def onRspQueryMaxOrderVolume(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """"""
+        """查询最大报单数量响应"""
         pass
 
     def onRspSettlementInfoConfirm(self, data: dict, error: dict, reqid: int, last: bool) -> None:
@@ -501,7 +510,7 @@ class SgitTdApi(TdApi):
         if data["InstrumentID"] in symbol_exchange_map:
             # 获取缓存持仓
             key: str = f"{data['InstrumentID'], data['PosiDirection']}"
-            position: Optional[PositionData] = self.positions.get(key, None)
+            position: PositionData = self.positions.get(key, None)
             if not position:
                 position: PositionData = PositionData(
                     symbol=data["InstrumentID"],
@@ -547,7 +556,7 @@ class SgitTdApi(TdApi):
             self.positions.clear()
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """"""
+        """请求查询资金账户响应"""
         if "AccountID" not in data:
             return
 
@@ -564,7 +573,7 @@ class SgitTdApi(TdApi):
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool) -> None:
         """合约查询回报"""
         if data:
-            product: Optional[Product] = PRODUCT_SGIT2VT.get(data["ProductClass"], None)
+            product: Product = PRODUCT_SGIT2VT.get(data["ProductClass"], None)
 
             contract: ContractData = ContractData(
                 symbol=data["InstrumentID"],
@@ -610,7 +619,7 @@ class SgitTdApi(TdApi):
     def onRtnOrder(self, data: dict) -> None:
         """订单更新推送"""
         symbol: str = data["InstrumentID"]
-        exchange: Optional[Exchange] = symbol_exchange_map.get(symbol, "")
+        exchange: Exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
             self.order_data.append(data)
             return
@@ -643,7 +652,7 @@ class SgitTdApi(TdApi):
     def onRtnTrade(self, data: dict) -> None:
         """成交更新推送"""
         symbol: str = data["InstrumentID"]
-        exchange: Optional[Exchange] = symbol_exchange_map.get(symbol, "")
+        exchange: Exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
             self.trade_data.append(data)
             return
@@ -699,8 +708,8 @@ class SgitTdApi(TdApi):
             self.authenticate()
 
     def authenticate(self) -> None:
-        """鉴权验证"""
-        req: Dict[str, str] = {
+        """发起授权验证"""
+        req: dict = {
             "UserID": self.userid,
             "BrokerID": self.brokerid,
             "AuthCode": self.auth_code,
@@ -714,11 +723,11 @@ class SgitTdApi(TdApi):
         self.reqAuthenticate(req, self.reqid)
 
     def login(self) -> None:
-        """用户登陆"""
+        """用户登录"""
         if self.login_failed:
             return
 
-        req: Dict[str, str] = {
+        req: dict = {
             "UserID": self.userid,
             "Password": self.password,
             "BrokerID": self.brokerid,
@@ -740,7 +749,7 @@ class SgitTdApi(TdApi):
         self.order_ref += 1
         orderid: str = str(self.order_ref).rjust(12, "0")
 
-        sgit_req: Dict[str, Any] = {
+        sgit_req: dict = {
             "InstrumentID": req.symbol,
             "ExchangeID": req.exchange.value,
             "LimitPrice": req.price,
@@ -785,7 +794,7 @@ class SgitTdApi(TdApi):
 
     def cancel_order(self, req: CancelRequest) -> None:
         """委托撤单"""
-        sgit_req: Dict[str, Any] = {
+        sgit_req: dict = {
             "InstrumentID": req.symbol,
             "ExchangeID": req.exchange.value,
             "OrderRef": req.orderid,
@@ -817,7 +826,7 @@ class SgitTdApi(TdApi):
 
 
 def adjust_price(price: float) -> float:
-    """"""
+    """将异常的浮点数最大值（MAX_FLOAT）数据调整为0"""
     if price == MAX_FLOAT:
         price = 0
     return price
