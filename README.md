@@ -60,3 +60,6 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+## 连接
+
+连接前请先修改libcrypto.so为libcrypto.so.10，libssl.so为libssl.so.10。
