@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 import pytz
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from ..api import (
     MdApi,

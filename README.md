@@ -4,15 +4,15 @@
 </p>
 
 <p align="center">
-    <img src ="https://img.shields.io/badge/version-4.8-blueviolet.svg"/>
-    <img src ="https://img.shields.io/badge/platform-windows|linux-yellow.svg"/>
+    <img src ="https://img.shields.io/badge/version-4.8.0-blueviolet.svg"/>
+    <img src ="https://img.shields.io/badge/platform-linux-yellow.svg"/>
     <img src ="https://img.shields.io/badge/python-3.7-blue.svg" />
     <img src ="https://img.shields.io/github/license/vnpy/vnpy.svg?color=orange"/>
 </p>
 
 ## 说明
 
-基于飞鼠4.8版本封装开发的linux接口(暂不支持windows)。
+基于飞鼠柜台的4.8版本API封装开发的交易接口，只支持Linux系统。
 
 ## 安装
 
@@ -60,6 +60,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-## 连接
+
+## 注意
 
 连接前请先修改libcrypto.so为libcrypto.so.10，libssl.so为libssl.so.10。
