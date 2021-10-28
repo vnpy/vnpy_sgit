@@ -63,4 +63,4 @@ if __name__ == "__main__":
 
 ## 注意
 
-连接前请先修改libcrypto.so为libcrypto.so.10，libssl.so为libssl.so.10。
+连接前请先将运行的python下lib/site-packages文件夹下vnpy_sgit/api中的rsa.pk文件放到运行目录。并修改libcrypto.so为libcrypto.so.10，libssl.so为libssl.so.10。

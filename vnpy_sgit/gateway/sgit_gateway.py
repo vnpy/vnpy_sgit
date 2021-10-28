@@ -418,24 +418,12 @@ class SgitTdApi(TdApi):
         """服务器连接成功回报"""
         self.gateway.write_log("交易服务器连接成功")
 
-        if self.auth_code:
-            self.authenticate()
-        else:
-            self.login()
+        self.login()
 
     def onFrontDisconnected(self, reason: int) -> None:
         """服务器连接断开回报"""
         self.login_status: bool = False
         self.gateway.write_log(f"交易服务器连接断开，原因{reason}")
-
-    def onRspAuthenticate(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """用户授权验证回报"""
-        if not error['ErrorID']:
-            self.auth_status: bool = True
-            self.gateway.write_log("交易服务器授权验证成功")
-            self.login()
-        else:
-            self.gateway.write_error("交易服务器授权验证失败", error)
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool) -> None:
         """用户登录请求回报"""
@@ -629,8 +617,12 @@ class SgitTdApi(TdApi):
         orderid: str = data["OrderRef"]
         self.order_ref = max(self.order_ref, int(orderid))
 
-        timestamp: str = f"{data['InsertDate']} {data['InsertTime']}"
-        dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
+        if data['InsertDate']:
+            timestamp: str = f"{data['InsertDate']} {data['InsertTime']}"
+            dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
+        else:
+            timestamp: str = f"{data['InsertTime']}"
+            dt: datetime = datetime.strptime(timestamp, "%H:%M:%S")
         dt: datetime = CHINA_TZ.localize(dt)
 
         order: OrderData = OrderData(
@@ -661,8 +653,12 @@ class SgitTdApi(TdApi):
 
         orderid: str = self.sysid_orderid_map[data["OrderSysID"]]
 
-        timestamp: str = f"{data['TradeDate']} {data['TradeTime']}"
-        dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
+        if data['TradeDate']:
+            timestamp: str = f"{data['TradeDate']} {data['TradeTime']}"
+            dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
+        else:
+            timestamp: str = f"{data['TradeTime']}"
+            dt: datetime = datetime.strptime(timestamp, "%H:%M:%S")
         dt: datetime = CHINA_TZ.localize(dt)
 
         trade: TradeData = TradeData(
@@ -706,23 +702,6 @@ class SgitTdApi(TdApi):
             self.init()
 
             self.connect_status: bool = True
-        else:
-            self.authenticate()
-
-    def authenticate(self) -> None:
-        """发起授权验证"""
-        req: dict = {
-            "UserID": self.userid,
-            "BrokerID": self.brokerid,
-            "AuthCode": self.auth_code,
-            "AppID": self.appid
-        }
-
-        if self.product_info:
-            req["UserProductInfo"] = self.product_info
-
-        self.reqid += 1
-        self.reqAuthenticate(req, self.reqid)
 
     def login(self) -> None:
         """用户登录"""
@@ -733,6 +712,7 @@ class SgitTdApi(TdApi):
             "UserID": self.userid,
             "Password": self.password,
             "BrokerID": self.brokerid,
+            "AuthCode": self.auth_code,
             "AppID": self.appid
         }
 
@@ -803,6 +783,7 @@ class SgitTdApi(TdApi):
             "ActionFlag": THOST_FTDC_AF_Delete,
             "BrokerID": self.brokerid,
             "InvestorID": self.userid,
+            "UserID": self.userid
         }
 
         self.reqid += 1
