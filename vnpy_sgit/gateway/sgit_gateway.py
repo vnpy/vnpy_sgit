@@ -143,7 +143,7 @@ symbol_size_map: Dict[str, float] = {}
 
 class SgitGateway(BaseGateway):
     """
-    vn.py用于对接飞鼠的接口。
+    VeighNa用于对接飞鼠的接口。
     """
 
     default_name: str = "SGIT"
