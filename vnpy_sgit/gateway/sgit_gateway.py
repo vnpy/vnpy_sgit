@@ -146,6 +146,8 @@ class SgitGateway(BaseGateway):
     vn.py用于对接飞鼠的接口。
     """
 
+    default_name: str = "SGIT"
+
     default_setting: Dict[str, str] = {
         "用户名": "",
         "密码": "",
@@ -157,9 +159,9 @@ class SgitGateway(BaseGateway):
 
     exchanges: List[Exchange] = list(EXCHANGE_SGIT2VT.values())
 
-    def __init__(self, event_engine):
+    def __init__(self, event_engine, gateway_name: str):
         """构造函数"""
-        super().__init__(event_engine, "SGIT")
+        super().__init__(event_engine, gateway_name)
 
         self.td_api: "SgitTdApi" = SgitTdApi(self)
         self.md_api: "SgitMdApi" = SgitMdApi(self)
