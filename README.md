@@ -21,7 +21,7 @@
 直接使用pip命令：
 
 ```
-pip install vnpy_ctabacktester
+pip install vnpy_sgit
 ```
 
 
