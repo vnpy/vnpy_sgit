@@ -1,5 +1,4 @@
 import sys
-import pytz
 from datetime import datetime
 from typing import Dict, List
 from pathlib import Path
@@ -26,7 +25,7 @@ from vnpy.trader.object import (
     CancelRequest,
     SubscribeRequest,
 )
-from vnpy.trader.utility import get_folder_path
+from vnpy.trader.utility import get_folder_path, ZoneInfo
 from vnpy.trader.event import EVENT_TIMER
 
 from ..api import (
@@ -135,7 +134,7 @@ OPTIONTYPE_SGIT2VT: Dict[str, OptionType] = {
 
 # 其他常量
 MAX_FLOAT: float = sys.float_info.max                  # 浮点数极限值
-CHINA_TZ = pytz.timezone("Asia/Shanghai")              # 中国时区
+CHINA_TZ = ZoneInfo("Asia/Shanghai")              # 中国时区
 
 # 全局缓存字典
 symbol_exchange_map: Dict[str, Exchange] = {}
@@ -299,7 +298,7 @@ class SgitMdApi(MdApi):
 
         timestamp: str = f"{data['TradingDay']} {data['UpdateTime']}.{int(data['UpdateMillisec']/100)}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-        dt: datetime = CHINA_TZ.localize(dt)
+        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
 
         tick: TickData = TickData(
             symbol=symbol,
@@ -622,7 +621,7 @@ class SgitTdApi(TdApi):
         else:
             timestamp: str = f"{data['InsertTime']}"
             dt: datetime = datetime.strptime(timestamp, "%H:%M:%S")
-        dt: datetime = CHINA_TZ.localize(dt)
+        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
 
         order: OrderData = OrderData(
             symbol=symbol,
@@ -658,7 +657,7 @@ class SgitTdApi(TdApi):
         else:
             timestamp: str = f"{data['TradeTime']}"
             dt: datetime = datetime.strptime(timestamp, "%H:%M:%S")
-        dt: datetime = CHINA_TZ.localize(dt)
+        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
 
         trade: TradeData = TradeData(
             symbol=symbol,
