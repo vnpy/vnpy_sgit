@@ -1,8 +1,32 @@
-from pathlib import Path
 import sys
-import pytz
 from datetime import datetime
 from typing import Dict, List
+from pathlib import Path
+
+from vnpy.event import Event
+from vnpy.trader.constant import (
+    Direction,
+    Offset,
+    Exchange,
+    OrderType,
+    Product,
+    Status,
+    OptionType
+)
+from vnpy.trader.gateway import BaseGateway
+from vnpy.trader.object import (
+    TickData,
+    OrderData,
+    TradeData,
+    PositionData,
+    AccountData,
+    ContractData,
+    OrderRequest,
+    CancelRequest,
+    SubscribeRequest,
+)
+from vnpy.trader.utility import get_folder_path, ZoneInfo
+from vnpy.trader.event import EVENT_TIMER
 
 from ..api import (
     MdApi,
@@ -39,30 +63,7 @@ from ..api import (
     THOST_FTDC_VC_CV,
     THOST_FTDC_AF_Delete
 )
-from vnpy.event.engine import Event
-from vnpy.trader.constant import (
-    Direction,
-    Offset,
-    Exchange,
-    OrderType,
-    Product,
-    Status,
-    OptionType
-)
-from vnpy.trader.gateway import BaseGateway
-from vnpy.trader.object import (
-    TickData,
-    OrderData,
-    TradeData,
-    PositionData,
-    AccountData,
-    ContractData,
-    OrderRequest,
-    CancelRequest,
-    SubscribeRequest,
-)
-from vnpy.trader.utility import get_folder_path
-from vnpy.trader.event import EVENT_TIMER
+
 
 # 委托状态映射
 STATUS_SGIT2VT: Dict[str, Status] = {
@@ -132,8 +133,8 @@ OPTIONTYPE_SGIT2VT: Dict[str, OptionType] = {
 }
 
 # 其他常量
-MAX_FLOAT: float = sys.float_info.max
-CHINA_TZ = pytz.timezone("Asia/Shanghai")
+MAX_FLOAT: float = sys.float_info.max                  # 浮点数极限值
+CHINA_TZ = ZoneInfo("Asia/Shanghai")              # 中国时区
 
 # 全局缓存字典
 symbol_exchange_map: Dict[str, Exchange] = {}
@@ -232,7 +233,7 @@ class SgitGateway(BaseGateway):
     def init_query(self) -> None:
         """初始化查询任务"""
         self.count: int = 0
-        self.query_functions = [self.query_account, self.query_position]
+        self.query_functions: list = [self.query_account, self.query_position]
         self.event_engine.register(EVENT_TIMER, self.process_timer_event)
 
 
@@ -297,7 +298,7 @@ class SgitMdApi(MdApi):
 
         timestamp: str = f"{data['TradingDay']} {data['UpdateTime']}.{int(data['UpdateMillisec']/100)}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-        dt: datetime = CHINA_TZ.localize(dt)
+        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
 
         tick: TickData = TickData(
             symbol=symbol,
@@ -419,7 +420,6 @@ class SgitTdApi(TdApi):
     def onFrontConnected(self) -> None:
         """服务器连接成功回报"""
         self.gateway.write_log("交易服务器连接成功")
-
         self.login()
 
     def onFrontDisconnected(self, reason: int) -> None:
@@ -481,10 +481,6 @@ class SgitTdApi(TdApi):
         """委托撤单失败回报"""
         if error["ErrorID"] != 0:
             self.gateway.write_error("交易撤单失败", error)
-
-    def onRspQueryMaxOrderVolume(self, data: dict, error: dict, reqid: int, last: bool) -> None:
-        """查询最大报单数量响应"""
-        pass
 
     def onRspSettlementInfoConfirm(self, data: dict, error: dict, reqid: int, last: bool) -> None:
         """结算信息确认回报"""
@@ -625,7 +621,7 @@ class SgitTdApi(TdApi):
         else:
             timestamp: str = f"{data['InsertTime']}"
             dt: datetime = datetime.strptime(timestamp, "%H:%M:%S")
-        dt: datetime = CHINA_TZ.localize(dt)
+        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
 
         order: OrderData = OrderData(
             symbol=symbol,
@@ -661,7 +657,7 @@ class SgitTdApi(TdApi):
         else:
             timestamp: str = f"{data['TradeTime']}"
             dt: datetime = datetime.strptime(timestamp, "%H:%M:%S")
-        dt: datetime = CHINA_TZ.localize(dt)
+        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
 
         trade: TradeData = TradeData(
             symbol=symbol,
